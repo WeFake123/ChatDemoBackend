@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// CORS (ok)
+ //CORS (ok)
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
@@ -19,8 +19,7 @@ app.use((req, res, next) => {
 });
 
 // rutas
-app.use(inicio);
-
+app.use("/", inicio);
 const startServer = async () => {
   try {
     // ⚠️ NO usar force:true en producción

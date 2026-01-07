@@ -2,19 +2,24 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../db.js";
 
 export const Text = sequelize.define("texto", {
-    id:{
+    id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
-    name:{
+    name: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        validate: {
+            len: [1, 20], // seguridad extra
+        },
+    },
+    text: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    text:{
-        type: DataTypes.STRING,
-        allowNull: false,
+    image: {
+        type: DataTypes.STRING, // ruta o URL
+        allowNull: true,
     }
-
-})
-
+});
