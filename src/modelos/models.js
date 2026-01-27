@@ -23,3 +23,19 @@ export const Text = sequelize.define("texto", {
         allowNull: true,
     }
 });
+
+export const Chat = sequelize.define("chat", {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    data: {
+        type: DataTypes.STRING(),
+        allowNull: false,
+    },
+    father: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    }
+});
