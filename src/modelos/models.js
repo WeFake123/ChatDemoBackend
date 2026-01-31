@@ -8,10 +8,10 @@ export const Text = sequelize.define("texto", {
         autoIncrement: true,
     },
     name: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(35),
         allowNull: false,
         validate: {
-            len: [1, 20], // seguridad extra
+            len: [1, 35], // seguridad extra
         },
     },
     text: {
@@ -29,6 +29,10 @@ export const Chat = sequelize.define("chat", {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
+    },
+    idPost: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
     },
     data: {
         type: DataTypes.STRING(),

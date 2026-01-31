@@ -35,20 +35,47 @@ export const postText = async (req, res) => {
 };
 
 
-//----------------------------------------------------------
+export const getTextId = async (req, res) => {
+  const { id } = req.params;
+  console.log("Controller getChat", req.params.id);
 
-export const getChat = async (req, res) => {
   try {
-    const textos = await Chat.findAll();
+    const textos = await Text.findAll({
+      where: { id: id }
+    });
     res.json(textos);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener Chats" });
   }
 };
 
-export const postChat = async (req, res) => {
+
+//----------------------------------------------------------
+
+export const getChat = async (req, res) => {
+  console.log(req.params)
+      const { id } = req.params;
+
   try {
-    const {data, father } = req.body;
+
+    const textos = await Chat.findAll({
+      where: {
+        idPost: id
+      }
+    });
+    res.json(textos);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener Chats" });
+  }
+};
+
+
+
+
+export const postChat = async (req, res) => {
+  console.log("hola s")
+  try {
+    const {data, idPost, father} = req.body;
 
     if (!data ) {
       return res.status(400).json({ message: "Campos incompletos" });
@@ -56,6 +83,7 @@ export const postChat = async (req, res) => {
 
     const nuevoChat = await Chat.create({
       data,
+      idPost,
       father
     });
 
