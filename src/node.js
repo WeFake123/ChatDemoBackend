@@ -30,7 +30,7 @@ app.use("/", inicio);
 
 const startServer = async () => {
   try {
-    await sequelize.sync({force:true}); // ⚠️ solo desarrollo
+    await sequelize.sync(); // ⚠️ solo desarrollo
 
     app.listen(PORT, () => {
       console.log(`🚀 Server corriendo en puerto ${PORT}`);
