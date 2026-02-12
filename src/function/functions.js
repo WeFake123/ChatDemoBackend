@@ -1,7 +1,7 @@
 import { Text } from "../modelos/models.js";
 import { Chat } from "../modelos/models.js";
 
-
+import { io } from "../node.js";
 
 export const getText = async (req, res) => {
   try {
@@ -75,6 +75,7 @@ export const getChat = async (req, res) => {
 export const postChat = async (req, res) => {
   try {
     const {data, idPost, serial, replyTo} = req.body;
+    const image = req.file;
 
     if (!data ) {
       return res.status(400).json({ message: "Campos incompletos" });
@@ -97,8 +98,11 @@ export const postChat = async (req, res) => {
       data,
       idPost,
       serial,
-      replyTo
+      replyTo,
+      image: req.file ? req.file.filename : null,  // 🔥 FIX
     });
+
+    io.emit("nuevo_mensaje", nuevoChat);
 
     res.json(nuevoChat);
   } catch (error) {

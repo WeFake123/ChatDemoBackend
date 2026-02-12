@@ -45,5 +45,9 @@ export const Chat = sequelize.define("chat", {
     replyTo: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    image: {
+        type: DataTypes.STRING, // ruta o URL
+        allowNull: true,
     }
 });

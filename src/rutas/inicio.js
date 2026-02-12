@@ -12,7 +12,7 @@ router.post("/inicio", upload.single("image"), postText);
 
 
 
-router.post("/inicio/:id", postChat);
+router.post("/inicio/:id", upload.single("image"), postChat);
 
 router.get("/inicio/:id", getChat);
 
