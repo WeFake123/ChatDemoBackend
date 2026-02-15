@@ -21,7 +21,11 @@ export const Text = sequelize.define("texto", {
     image: {
         type: DataTypes.STRING, // ruta o URL
         allowNull: true,
-    }
+    },
+    ip: {
+  type: DataTypes.STRING,
+  allowNull: false
+}
 });
 
 export const Chat = sequelize.define("chat", {
