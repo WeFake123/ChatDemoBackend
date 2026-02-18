@@ -1,8 +1,22 @@
-import express from "express";
-import inicio from "./rutas/inicio.js";
-import { sequelize } from "./db.js";
-import "./modelos/models.js";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import cors from "cors";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({
+  path: path.resolve(__dirname, "../.env")
+});
+
+console.log("DATABASE_URL =>", process.env.DATABASE_URL);
+
+import express from "express";
+
+import inicio from "./rutas/inicio.js";
+import  sequelize  from "./db.js";
+import "./modelos/models.js";
 import http from "http";
 import { Server } from "socket.io";
 
@@ -10,13 +24,20 @@ import { Server } from "socket.io";
 const app = express();
 
 
+
+
 const server = http.createServer(app);
 
 export const io = new Server(server, {
   cors: {
-    origin: "*"
+    origin: [
+      "https://chat-demo-ashy-pi.vercel.app",
+      "https://chat-demo-lduq1za90-augustos-projects-baeb41e6.vercel.app"
+    ],
+    methods: ["GET", "POST"]
   }
 });
+
 
 
 io.on("connection", (socket) => {
@@ -40,16 +61,16 @@ const PORT = process.env.PORT || 3000;
 // middleware base
 app.use(express.json());
 
-// 📂 Servir imágenes subidas
-app.use("/uploads", express.static("uploads"));
+
 
 // 🌍 CORS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  next();
-});
+app.use(cors({
+  origin: [
+    "https://chat-demo-ashy-pi.vercel.app",
+    "https://chat-demo-lduq1za90-augustos-projects-baeb41e6.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 
 // rutas
 app.use("/", inicio);

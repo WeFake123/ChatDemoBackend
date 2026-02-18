@@ -1,45 +1,31 @@
-import { Text } from "../modelos/models.js";
-import { Chat } from "../modelos/models.js";
+import { Chat, Text } from "../modelos/models.js";
 import { Op } from "sequelize";
-import { fileTypeFromBuffer } from "file-type";
-import fs from "fs";
+import cloud from "../middleware/cloud.js"; // middleware Multer + Cloudinary
 import { io } from "../node.js";
+
+/* ===============================
+   TEXTOS (POST PRINCIPAL)
+================================= */
 
 export const getText = async (req, res) => {
   try {
-    const textos = await Text.findAll();
+    const textos = await Text.findAll({
+      order: [["createdAt", "DESC"]],
+    });
     res.json(textos);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error al obtener textos" });
   }
 };
 
-
 export const postText = async (req, res) => {
-  let filePath = null;
-
   try {
     const { name, text } = req.body;
-    const image = req.file;
     const ip = req.ip;
 
-    // 🔹 Validar campos primero
-    if (!name || !text || !image) {
-      if (image) fs.unlinkSync(image.path);
+    if (!name || !text || !req.file) {
       return res.status(400).json({ message: "Campos incompletos" });
-    }
-
-    filePath = image.path;
-
-    // 🔹 Validación REAL del archivo
-    const buffer = await fs.promises.readFile(filePath);
-    const type = await fileTypeFromBuffer(buffer);
-
-    const allowedMime = ["image/jpeg", "image/png", "image/webp"];
-
-    if (!type || !allowedMime.includes(type.mime)) {
-      await fs.promises.unlink(filePath);
-      return res.status(400).json({ error: "Archivo inválido" });
     }
 
     // 🔹 Cooldown por IP (5 minutos)
@@ -48,143 +34,106 @@ export const postText = async (req, res) => {
     const ultimoPost = await Text.findOne({
       where: {
         ip,
-        createdAt: {
-          [Op.gt]: cincoMinutosAtras
-        }
-      }
+        createdAt: { [Op.gt]: cincoMinutosAtras },
+      },
     });
 
     if (ultimoPost) {
-      await fs.promises.unlink(filePath);
       return res.status(429).json({
-        message: "Esperá 5 minutos antes de volver a postear"
+        message: "Esperá 5 minutos antes de volver a postear",
       });
     }
 
-    // 🔹 Crear post
+    // 🔥 Subida ya realizada por Multer + Cloudinary
+    const imageUrl = req.file.path; // CloudinaryStorage automáticamente asigna req.file.path
+
     const nuevoTexto = await Text.create({
       name,
       text,
-      image: image.filename,
-      ip
+      image: imageUrl,
+      ip,
     });
 
     io.emit("nuevo_post", nuevoTexto);
 
     res.json(nuevoTexto);
-
   } catch (error) {
     console.error(error);
-
-    // 🔥 Si algo falla → borrar imagen
-    if (filePath && fs.existsSync(filePath)) {
-      await fs.promises.unlink(filePath);
-    }
-
     res.status(500).json({ error: "Error al crear el post" });
   }
 };
 
 export const getTextId = async (req, res) => {
-  const { id } = req.params;
-  console.log("Controller getChat", req.params.id);
-
   try {
-    const textos = await Text.findAll({
-      where: { id: id }
-    });
-    res.json(textos);
+    const { id } = req.params;
+
+    const texto = await Text.findByPk(id);
+
+    if (!texto) {
+      return res.status(404).json({ message: "Post no encontrado" });
+    }
+
+    res.json(texto);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener Chats" });
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener el post" });
   }
 };
 
-
-//----------------------------------------------------------
+/* ===============================
+   CHAT (RESPUESTAS)
+================================= */
 
 export const getChat = async (req, res) => {
-  console.log(req.params)
-      const { id } = req.params;
-
   try {
+    const { id } = req.params;
 
-    const textos = await Chat.findAll({
-      where: {
-        idPost: id
-      }
+    const chats = await Chat.findAll({
+      where: { idPost: id },
+      order: [["createdAt", "ASC"]],
     });
-    res.json(textos);
+
+    res.json(chats);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener Chats" });
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener chats" });
   }
 };
 
-
-
-
 export const postChat = async (req, res) => {
-  let filePath = null;
-
   try {
     const { data, idPost, serial, replyTo } = req.body;
-    const image = req.file;
 
-    // 🔹 Validar texto obligatorio
     if (!data || !idPost || !serial) {
-      if (image) fs.unlinkSync(image.path);
       return res.status(400).json({ message: "Campos incompletos" });
     }
 
-    // 🔹 Verificar que el post exista (MUCHO mejor que findAll)
     const postExistente = await Text.findByPk(idPost);
     if (!postExistente) {
-      if (image) fs.unlinkSync(image.path);
       return res.status(400).json({ message: "Post inexistente" });
     }
 
-    // 🔹 Verificar serial único
     const serialExistente = await Chat.findOne({ where: { serial } });
     if (serialExistente) {
-      if (image) fs.unlinkSync(image.path);
       return res.status(400).json({ message: "Serial inválido" });
     }
 
-    // 🔹 Si hay imagen → validación REAL
-    if (image) {
-      filePath = image.path;
+    // 🔹 Multer ya subió la imagen si existe
+    const imageUrl = req.file ? req.file.path : null;
 
-      const buffer = fs.readFileSync(filePath);
-      const type = await fileTypeFromBuffer(buffer);
-
-      const allowedMime = ["image/jpeg", "image/png", "image/webp"];
-
-      if (!type || !allowedMime.includes(type.mime)) {
-        fs.unlinkSync(filePath);
-        return res.status(400).json({ error: "Archivo inválido" });
-      }
-    }
-
-    // 🔹 Crear chat
     const nuevoChat = await Chat.create({
       data,
       idPost,
       serial,
       replyTo,
-      image: image ? image.filename : null,
+      image: imageUrl,
     });
 
     io.emit("nuevo_mensaje", nuevoChat);
 
     res.json(nuevoChat);
-
   } catch (error) {
     console.error(error);
-
-    // 🔥 Si algo falla y había imagen → la borramos
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
     res.status(500).json({ error: "Error al crear el chat" });
   }
 };
