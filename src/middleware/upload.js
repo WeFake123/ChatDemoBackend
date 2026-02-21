@@ -1,7 +1,13 @@
 import multer from "multer";
 
-const storage = multer.memoryStorage();
-
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -13,12 +19,15 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+   dest: 'uploads/',
+   storage: storage,
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
 });
+
+
 
 export default upload;
 

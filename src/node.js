@@ -1,18 +1,14 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+
 import cors from "cors";
+import express from "express";
+import multer from "multer";
+const app = express();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({
-  path: path.resolve(__dirname, "../.env")
-});
 
 console.log("DATABASE_URL =>", process.env.DATABASE_URL);
 
-import express from "express";
+
+
 
 import inicio from "./rutas/inicio.js";
 import  sequelize  from "./db.js";
@@ -21,7 +17,6 @@ import http from "http";
 import { Server } from "socket.io";
 
 
-const app = express();
 
 
 
@@ -31,8 +26,7 @@ const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
     origin: [
-      "https://chat-demo-ashy-pi.vercel.app",
-      "https://chat-demo-lduq1za90-augustos-projects-baeb41e6.vercel.app"
+      "http://localhost:5173",
     ],
     methods: ["GET", "POST"]
   }
@@ -61,13 +55,12 @@ const PORT = process.env.PORT || 3000;
 // middleware base
 app.use(express.json());
 
-
+app.use("/uploads", express.static("uploads"));
 
 // 🌍 CORS
 app.use(cors({
   origin: [
-    "https://chat-demo-ashy-pi.vercel.app",
-    "https://chat-demo-lduq1za90-augustos-projects-baeb41e6.vercel.app"
+    "http://localhost:5173",
   ],
   methods: ["GET", "POST", "PUT", "DELETE"]
 }));

@@ -1,6 +1,5 @@
 import { Chat, Text } from "../modelos/models.js";
 import { Op } from "sequelize";
-import cloud from "../middleware/cloud.js"; // middleware Multer + Cloudinary
 import { io } from "../node.js";
 
 /* ===============================
@@ -21,9 +20,10 @@ export const getText = async (req, res) => {
 
 export const postText = async (req, res) => {
   try {
+       console.log(req.body)
     const { name, text } = req.body;
     const ip = req.ip;
-
+ 
     if (!name || !text || !req.file) {
       return res.status(400).json({ message: "Campos incompletos" });
     }
@@ -38,14 +38,17 @@ export const postText = async (req, res) => {
       },
     });
 
-    if (ultimoPost) {
-      return res.status(429).json({
-        message: "Esperá 5 minutos antes de volver a postear",
-      });
-    }
+    // if (ultimoPost) {
+    //   return res.status(429).json({
+    //     message: "Esperá 5 minutos antes de volver a postear",
+    //   });
+    // }
+         console.log(req.file)
 
-    // 🔥 Subida ya realizada por Multer + Cloudinary
-    const imageUrl = req.file.path; // CloudinaryStorage automáticamente asigna req.file.path
+     const imageUrl = req.file.originalname;
+
+     console.log(imageUrl)
+
 
     const nuevoTexto = await Text.create({
       name,
@@ -119,13 +122,13 @@ export const postChat = async (req, res) => {
     }
 
     // 🔹 Multer ya subió la imagen si existe
-    const imageUrl = req.file ? req.file.path : null;
 
+      const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
     const nuevoChat = await Chat.create({
       data,
       idPost,
       serial,
-      replyTo,
+      replyTo: replyTo === "" ? null : replyTo,
       image: imageUrl,
     });
 
